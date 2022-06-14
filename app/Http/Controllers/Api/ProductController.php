@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Product;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Http\Controllers\Api\ApiController;
 
-class ProductController extends Controller
+class ProductController extends ApiController
 {
     /**
      * Display a listing of the resource.
@@ -15,7 +15,13 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return Product::latest('id')->get();
+        $products =  Product::latest('id')->get();
+
+        return $this->sendResponse(
+            $products,
+            "All products.",
+            200,
+        );
     }
 
     /**
@@ -37,7 +43,16 @@ class ProductController extends Controller
     public function store(ProductRequest $request)
     {
         $product = Product::create($request->validated());
-        return $product;
+
+        if ($product instanceof Product && $request->has("image") && file_exists($request->image)) {
+            $product->addMedia($request->image)->toMediaCollection('product-image');
+        }
+
+        return $this->sendResponse(
+            $product,
+            "Product has been created successfully.",
+            201,
+        );
     }
 
     /**
@@ -48,7 +63,12 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        return Product::find($id);
+        $product =  Product::find($id);
+        return $this->sendResponse(
+            $product,
+            "Single product.",
+            200,
+        );
     }
 
     /**
@@ -72,8 +92,20 @@ class ProductController extends Controller
     public function update(ProductRequest $request, $id)
     {
         $product =  Product::find($id);
-        $product->update($request->validated());
-        return $product;
+        if ($product instanceof Product) {
+            $product->update($request->validated());
+        }
+
+        if ($product instanceof Product && $request->has("image") && file_exists($request->image)) {
+            $product->clearMediaCollection("product-image");
+            $product->addMedia($request->image)->toMediaCollection('product-image');
+        }
+
+        return $this->sendResponse(
+            $product->refresh(),
+            "Product has been updated successfully.",
+            201,
+        );
     }
 
     /**
@@ -85,8 +117,21 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::find($id);
-        $product->delete();
+        if ($product instanceof Product) {
+            $product->clearMediaCollection("product-image");
+            $product->delete();
 
-        return "Deleted Successfully";
+            return $this->sendResponse(
+                $product,
+                "Product has been deleted successfully.",
+                200,
+            );
+        }
+
+        return $this->sendError(
+            $product,
+            "Something went Wrong.",
+            404,
+        );
     }
 }

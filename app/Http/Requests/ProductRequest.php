@@ -23,10 +23,16 @@ class ProductRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $rules =  [
             'name' => ['required', 'string'],
             'price' => ['required'],
             'quantity' => ['required', 'numeric'],
+            'image' => ['required'],
         ];
+
+        if ($this->product) {
+            $rules['image'] = ['nullable'];
+        }
+        return $rules;
     }
 }
