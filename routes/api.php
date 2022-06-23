@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnalyticsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrderController;
@@ -18,5 +19,7 @@ Route::prefix("v1")->group(function () {
         Route::resource('products', ProductController::class);
         Route::resource('customers', CustomerController::class);
         Route::resource('orders', OrderController::class);
+
+        Route::get('analytics', [AnalyticsController::class, 'analytics']);
     });
 });
